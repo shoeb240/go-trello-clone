@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/shoeb240/go-trello-clone/model"
 	"github.com/shoeb240/go-trello-clone/repository"
 	"github.com/shoeb240/go-trello-clone/service"
@@ -12,7 +13,8 @@ import (
 )
 
 type ListHandler struct {
-	service *service.ListService
+	service  *service.ListService
+	validate *validator.Validate
 }
 
 type CustomKeyType string
@@ -24,7 +26,8 @@ const (
 
 func NewListHandler(repository *repository.Repository) *ListHandler {
 	return &ListHandler{
-		service: service.NewListService(repository),
+		service:  service.NewListService(repository),
+		validate: validator.New(),
 	}
 }
 
@@ -33,9 +36,15 @@ func (h *ListHandler) CreateList(c *gin.Context) {
 	c.BindJSON(&listModel)
 	listModel.ID = primitive.NewObjectID()
 
+	err := h.validate.Struct(listModel)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	ctx := context.WithValue(c.Request.Context(), boardIDKey, c.Param("boardID"))
 
-	err := h.service.Create(ctx, listModel)
+	err = h.service.Create(ctx, listModel)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
