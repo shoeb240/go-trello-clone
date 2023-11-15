@@ -2,15 +2,18 @@ package repository
 
 import (
 	"context"
+	"os"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const connectionString = "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.0.2"
-const dbName = "trello-db"
-
 func NewDBConnection() (*mongo.Database, error) {
+	godotenv.Load(".env")
+	connectionString := os.Getenv("CONNECTION_STRING")
+	dbName := os.Getenv("DB_NAME")
+
 	clientOption := options.Client().ApplyURI(connectionString)
 	client, err := mongo.Connect(context.TODO(), clientOption)
 	if err != nil {
