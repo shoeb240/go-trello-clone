@@ -3,13 +3,17 @@ package repository
 import "go.mongodb.org/mongo-driver/mongo"
 
 type Repository struct {
-	Board *BoardRepository
-	List  *ListRepository
+	Client mongo.Client
+	Board  *BoardRepository
+	List   *ListRepository
+	Card   *CardRepository
 }
 
 func NewRepositories(DB *mongo.Database) *Repository {
 	return &Repository{
-		Board: newBoardRepository(DB),
-		List:  newListRepository(DB),
+		Client: *DB.Client(),
+		Board:  newBoardRepository(DB),
+		List:   newListRepository(DB),
+		Card:   newCardRepository(DB),
 	}
 }

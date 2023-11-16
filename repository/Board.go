@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type BoardRepository struct {
@@ -41,4 +42,33 @@ func (r *BoardRepository) Create(ctx context.Context, boardModel model.Board) (p
 	}
 
 	return res.InsertedID.(primitive.ObjectID), nil
+}
+
+func (r *BoardRepository) AddCardToList(ctx context.Context, cardModel model.Card) error {
+	filter := bson.M{
+		"_id": cardModel.BoardID,
+	}
+	update := bson.M{
+		"$push": bson.M{
+			"lists.$[elem].cards": cardModel.ID,
+		},
+	}
+	arrayFilters := options.Update().SetArrayFilters(
+		options.ArrayFilters{
+			Filters: []interface{}{bson.M{"elem._id": cardModel.ListID}},
+		},
+	)
+	result, err := r.collection.UpdateOne(ctx,
+		filter,
+		update,
+		arrayFilters,
+	)
+
+	if err != nil {
+		return err
+	}
+	if result.ModifiedCount <= 0 {
+		return errors.New("list not updated")
+	}
+	return nil
 }
