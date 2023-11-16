@@ -16,6 +16,10 @@ type CardHandler struct {
 	validate *validator.Validate
 }
 
+const (
+	cardIDKey repository.CustomKeyType = "cardID"
+)
+
 func NewCardHandler(repository *repository.Repository) *CardHandler {
 	return &CardHandler{
 		service:  service.NewCardService(repository),
@@ -45,8 +49,7 @@ func (h *CardHandler) UpdateCard(c *gin.Context) {
 	cardModel := model.Card{}
 	c.BindJSON(&cardModel)
 
-	ctx := context.WithValue(c.Request.Context(), boardIDKey, c.Param("boardID"))
-	ctx = context.WithValue(ctx, listIDKey, c.Param("listID"))
+	ctx := context.WithValue(c.Request.Context(), cardIDKey, c.Param("cardID"))
 
 	msg, err := h.service.Update(ctx, cardModel)
 	if err != nil {

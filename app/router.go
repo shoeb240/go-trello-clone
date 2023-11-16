@@ -9,4 +9,5 @@ func (appConfig *appConfig) InitRouter() {
 	appConfig.router.PATCH("/list/:boardID/:listID", handler.List.UpdateList)
 
 	appConfig.router.POST("/card", handler.Card.CreateCard)
+	appConfig.router.PATCH("/card/:cardID", handler.Card.UpdateCard)
 }

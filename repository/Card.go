@@ -8,12 +8,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type CardRepository struct {
 	collection *mongo.Collection
 }
+
+const (
+	cardIDKey CustomKeyType = "cardID"
+)
 
 func newCardRepository(db *mongo.Database) *CardRepository {
 	return &CardRepository{
@@ -45,36 +48,25 @@ func (r *CardRepository) Create(ctx context.Context, cardModel model.Card) (prim
 }
 
 func (r *CardRepository) Update(ctx context.Context, cardModel model.Card) (string, error) {
-	boardID := ctx.Value(boardIDKey).(string)
-	objID, err := primitive.ObjectIDFromHex(boardID)
+	cardID := ctx.Value(cardIDKey).(string)
+	cardObjID, err := primitive.ObjectIDFromHex(cardID)
 	if err != nil {
-		return "x", err
-	}
-
-	cardID := ctx.Value(listIDKey).(string)
-	listObjID, err := primitive.ObjectIDFromHex(cardID)
-	if err != nil {
-		return "y", err
+		return "", err
 	}
 
 	filter := bson.M{
-		"_id": objID,
+		"_id": cardObjID,
 	}
 	update := bson.M{
 		"$set": bson.M{
-			"lists.$[elem].title":    cardModel.Title,
-			"lists.$[elem].position": cardModel.Position,
+			"title":       cardModel.Title,
+			"description": cardModel.Description,
+			"position":    cardModel.Position,
 		},
 	}
-	arrayFilters := options.Update().SetArrayFilters(
-		options.ArrayFilters{
-			Filters: []interface{}{bson.M{"elem._id": listObjID}},
-		},
-	)
 	result, err := r.collection.UpdateOne(ctx,
 		filter,
 		update,
-		arrayFilters,
 	)
 
 	if err != nil {
