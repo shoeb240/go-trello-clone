@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/shoeb240/go-trello-clone/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -28,8 +29,47 @@ func (r *BoardRepository) FindByID(ctx context.Context, ID string) (model.Board,
 		return model.Board{}, err
 	}
 
-	if err := r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&boardModel); err != nil {
-		return model.Board{}, errors.New("this is error")
+	pipeline := bson.A{
+		bson.M{
+			"$match": bson.M{
+				"_id": objID,
+			},
+		},
+		bson.M{
+			"$unwind": "$lists",
+		},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "Card",
+				"localField":   "lists.cards",
+				"foreignField": "_id",
+				"as":           "lists.card_details",
+			},
+		},
+		bson.M{
+			"$group": bson.M{
+				"_id":     "$_id",
+				"user_id": bson.M{"$first": "$user_id"},
+				"title":   bson.M{"$first": "$title"},
+				"lists":   bson.M{"$push": "$lists"},
+			},
+		},
+	}
+
+	cursor, err := r.collection.Aggregate(context.Background(), pipeline)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		if err := cursor.Decode(&boardModel); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if err := cursor.Err(); err != nil {
+		log.Fatal(err)
 	}
 
 	return boardModel, nil
