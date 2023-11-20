@@ -112,3 +112,32 @@ func (r *BoardRepository) AddCardToList(ctx context.Context, cardModel model.Car
 	}
 	return nil
 }
+
+func (r *BoardRepository) RemoveCardFromList(ctx context.Context, cardMoveReq CardMoveReq) error {
+	filter := bson.M{
+		"_id": cardMoveReq.BoardID,
+	}
+	update := bson.M{
+		"$pull": bson.M{
+			"lists.$[elem].cards": cardMoveReq.CardID,
+		},
+	}
+	arrayFilters := options.Update().SetArrayFilters(
+		options.ArrayFilters{
+			Filters: []interface{}{bson.M{"elem._id": cardMoveReq.FromListID}},
+		},
+	)
+	result, err := r.collection.UpdateOne(ctx,
+		filter,
+		update,
+		arrayFilters,
+	)
+
+	if err != nil {
+		return err
+	}
+	if result.ModifiedCount <= 0 {
+		return errors.New("card is not removed from list")
+	}
+	return nil
+}

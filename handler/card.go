@@ -9,6 +9,7 @@ import (
 	"github.com/shoeb240/go-trello-clone/model"
 	"github.com/shoeb240/go-trello-clone/repository"
 	"github.com/shoeb240/go-trello-clone/service"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type CardHandler struct {
@@ -54,6 +55,36 @@ func (h *CardHandler) UpdateCard(c *gin.Context) {
 	msg, err := h.service.Update(ctx, cardModel)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": msg})
+}
+
+func (h *CardHandler) MoveCard(c *gin.Context) {
+	cardMoveReq := repository.CardMoveReq{}
+	if err := c.BindJSON(&cardMoveReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.validate.Struct(cardMoveReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	cardID, err := primitive.ObjectIDFromHex(c.Param("cardID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	cardMoveReq.CardID = cardID
+
+	ctx := context.WithValue(c.Request.Context(), cardIDKey, c.Param("cardID"))
+
+	msg, err := h.service.MoveCard(ctx, cardMoveReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": msg})

@@ -18,24 +18,28 @@ const (
 	cardIDKey CustomKeyType = "cardID"
 )
 
+type CardMoveReq struct {
+	CardID     primitive.ObjectID `bson:"card_id" json:"card_id"`
+	BoardID    primitive.ObjectID `bson:"board_id" json:"board_id" validate:"required"`
+	FromListID primitive.ObjectID `bson:"from_list_id" json:"from_list_id" validate:"required"`
+	ToListID   primitive.ObjectID `bson:"to_list_id" json:"to_list_id" validate:"required"`
+	ToPosition int                `bson:"to_position" json:"to_position" validate:"required"`
+}
+
 func newCardRepository(db *mongo.Database) *CardRepository {
 	return &CardRepository{
 		collection: db.Collection("Card"),
 	}
 }
 
-func (r *CardRepository) FindByID(ctx context.Context, ID string) (*model.Card, error) {
+func (r *CardRepository) FindByID(ctx context.Context, objID primitive.ObjectID) (model.Card, error) {
 	var cardModel model.Card
-	objID, err := primitive.ObjectIDFromHex(ID)
-	if err != nil {
-		return nil, err
-	}
 
 	if err := r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&cardModel); err != nil {
-		return nil, errors.New("this is error")
+		return cardModel, errors.New("this is error")
 	}
 
-	return &cardModel, nil
+	return cardModel, nil
 }
 
 func (r *CardRepository) Create(ctx context.Context, cardModel model.Card) (primitive.ObjectID, error) {
@@ -47,7 +51,7 @@ func (r *CardRepository) Create(ctx context.Context, cardModel model.Card) (prim
 	return res.InsertedID.(primitive.ObjectID), nil
 }
 
-func (r *CardRepository) Update(ctx context.Context, cardModel model.Card) (string, error) {
+func (r *CardRepository) Update(ctx context.Context, updateData primitive.M) (string, error) {
 	cardID := ctx.Value(cardIDKey).(string)
 	cardObjID, err := primitive.ObjectIDFromHex(cardID)
 	if err != nil {
@@ -58,11 +62,7 @@ func (r *CardRepository) Update(ctx context.Context, cardModel model.Card) (stri
 		"_id": cardObjID,
 	}
 	update := bson.M{
-		"$set": bson.M{
-			"title":       cardModel.Title,
-			"description": cardModel.Description,
-			"position":    cardModel.Position,
-		},
+		"$set": updateData,
 	}
 	result, err := r.collection.UpdateOne(ctx,
 		filter,
