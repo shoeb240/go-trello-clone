@@ -22,12 +22,8 @@ func newBoardRepository(db *mongo.Database) *BoardRepository {
 	}
 }
 
-func (r *BoardRepository) FindByID(ctx context.Context, ID string) (model.Board, error) {
+func (r *BoardRepository) FindByID(ctx context.Context, objID primitive.ObjectID) (model.Board, error) {
 	var boardModel model.Board
-	objID, err := primitive.ObjectIDFromHex(ID)
-	if err != nil {
-		return model.Board{}, err
-	}
 
 	pipeline := bson.A{
 		bson.M{

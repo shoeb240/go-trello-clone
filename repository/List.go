@@ -28,20 +28,6 @@ func newListRepository(db *mongo.Database) *ListRepository {
 	}
 }
 
-func (r *ListRepository) FindByID(ctx context.Context, ID string) (*model.List, error) {
-	var listModel model.List
-	objID, err := primitive.ObjectIDFromHex(ID)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&listModel); err != nil {
-		return nil, errors.New("this is error")
-	}
-
-	return &listModel, nil
-}
-
 func (r *ListRepository) Create(ctx context.Context, listModel model.List) error {
 	boardID := ctx.Value(boardIDKey).(string)
 	objID, err := primitive.ObjectIDFromHex(boardID)

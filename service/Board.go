@@ -19,7 +19,12 @@ func NewBoardService(repository *repository.Repository) *BoardService {
 }
 
 func (s *BoardService) FullBoard(ctx context.Context, ID string) (model.Board, error) {
-	return s.repository.FindByID(ctx, ID)
+	objID, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return model.Board{}, err
+	}
+
+	return s.repository.FindByID(ctx, objID)
 }
 
 func (s *BoardService) Create(ctx context.Context, boardModel model.Board) (primitive.ObjectID, error) {
