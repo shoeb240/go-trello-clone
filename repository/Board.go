@@ -109,6 +109,33 @@ func (r *BoardRepository) AddCardToList(ctx context.Context, cardModel model.Car
 	return nil
 }
 
+func (r *BoardRepository) Update(ctx context.Context, updateData primitive.M) (string, error) {
+	boardID := ctx.Value(boardIDKey).(string)
+	boardObjID, err := primitive.ObjectIDFromHex(boardID)
+	if err != nil {
+		return "", err
+	}
+
+	filter := bson.M{
+		"_id": boardObjID,
+	}
+	update := bson.M{
+		"$set": updateData,
+	}
+	result, err := r.collection.UpdateOne(ctx,
+		filter,
+		update,
+	)
+
+	if err != nil {
+		return "", err
+	}
+	if result.ModifiedCount > 0 {
+		return "updated", nil
+	}
+	return "not modified", nil
+}
+
 func (r *BoardRepository) RemoveCardFromList(ctx context.Context, cardMoveReq CardMoveReq) error {
 	filter := bson.M{
 		"_id": cardMoveReq.BoardID,

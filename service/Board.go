@@ -5,6 +5,7 @@ import (
 
 	"github.com/shoeb240/go-trello-clone/model"
 	"github.com/shoeb240/go-trello-clone/repository"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,4 +30,11 @@ func (s *BoardService) FullBoard(ctx context.Context, ID string) (model.Board, e
 
 func (s *BoardService) Create(ctx context.Context, boardModel model.Board) (primitive.ObjectID, error) {
 	return s.repository.Create(ctx, boardModel)
+}
+
+func (s *BoardService) Update(ctx context.Context, boardModel model.Board) (string, error) {
+	updateData := bson.M{
+		"title": boardModel.Title,
+	}
+	return s.repository.Update(ctx, updateData)
 }

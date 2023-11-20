@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -50,4 +51,21 @@ func (h *BoardHandler) CreateBoard(c *gin.Context) {
 	boardModel.ID = boardID
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Created", "data": boardModel})
+}
+
+func (h *BoardHandler) UpdateBoard(c *gin.Context) {
+	boardModel := model.Board{}
+	if err := c.BindJSON(&boardModel); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx := context.WithValue(c.Request.Context(), boardIDKey, c.Param("boardID"))
+
+	msg, err := h.service.Update(ctx, boardModel)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": msg})
 }
