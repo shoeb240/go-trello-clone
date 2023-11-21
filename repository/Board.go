@@ -136,18 +136,18 @@ func (r *BoardRepository) Update(ctx context.Context, updateData primitive.M) (s
 	return "not modified", nil
 }
 
-func (r *BoardRepository) RemoveCardFromList(ctx context.Context, cardMoveReq CardMoveReq) error {
+func (r *BoardRepository) RemoveCardFromList(ctx context.Context, cardDeleteFromList CardDeleteFromList) error {
 	filter := bson.M{
-		"_id": cardMoveReq.BoardID,
+		"_id": cardDeleteFromList.BoardID,
 	}
 	update := bson.M{
 		"$pull": bson.M{
-			"lists.$[elem].cards": cardMoveReq.CardID,
+			"lists.$[elem].cards": cardDeleteFromList.CardID,
 		},
 	}
 	arrayFilters := options.Update().SetArrayFilters(
 		options.ArrayFilters{
-			Filters: []interface{}{bson.M{"elem._id": cardMoveReq.FromListID}},
+			Filters: []interface{}{bson.M{"elem._id": cardDeleteFromList.ListID}},
 		},
 	)
 	result, err := r.collection.UpdateOne(ctx,

@@ -26,6 +26,12 @@ type CardMoveReq struct {
 	ToPosition int                `bson:"to_position" json:"to_position" validate:"required"`
 }
 
+type CardDeleteFromList struct {
+	CardID  primitive.ObjectID
+	BoardID primitive.ObjectID
+	ListID  primitive.ObjectID
+}
+
 func newCardRepository(db *mongo.Database) *CardRepository {
 	return &CardRepository{
 		collection: db.Collection("Card"),
@@ -36,7 +42,7 @@ func (r *CardRepository) FindByID(ctx context.Context, objID primitive.ObjectID)
 	var cardModel model.Card
 
 	if err := r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&cardModel); err != nil {
-		return cardModel, errors.New("this is error")
+		return cardModel, errors.New("card not found")
 	}
 
 	return cardModel, nil
@@ -73,7 +79,22 @@ func (r *CardRepository) Update(ctx context.Context, updateData primitive.M) (st
 		return "", err
 	}
 	if result.ModifiedCount > 0 {
-		return "Updated", nil
+		return "updated", nil
 	}
-	return "Not Modified", nil
+	return "not modified", nil
+}
+
+func (r *CardRepository) Delete(ctx context.Context, cardObjID primitive.ObjectID) (string, error) {
+	filter := bson.M{
+		"_id": cardObjID,
+	}
+	result, err := r.collection.DeleteOne(ctx, filter)
+
+	if err != nil {
+		return "", err
+	}
+	if result.DeletedCount > 0 {
+		return "deleted", nil
+	}
+	return "not deleted", nil
 }

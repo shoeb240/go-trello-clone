@@ -12,4 +12,5 @@ func (appConfig *appConfig) InitRouter() {
 	appConfig.router.POST("/card", handler.Card.CreateCard)
 	appConfig.router.PATCH("/card/:cardID", handler.Card.UpdateCard)
 	appConfig.router.PATCH("/card/:cardID/move", handler.Card.MoveCard)
+	appConfig.router.DELETE("/card/:cardID", handler.Card.DeleteCard)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/shoeb240/go-trello-clone/model"
 	"github.com/shoeb240/go-trello-clone/repository"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -83,6 +84,12 @@ func (s *CardService) MoveCard(ctx context.Context, cardMoveReq repository.CardM
 			return err
 		}
 
+		cardDeleteFromList := repository.CardDeleteFromList{
+			CardID:  cardMoveReq.CardID,
+			BoardID: cardMoveReq.BoardID,
+			ListID:  cardMoveReq.FromListID,
+		}
+
 		updateData := bson.M{
 			"list_id":  cardMoveReq.ToListID,
 			"position": cardMoveReq.ToPosition,
@@ -104,7 +111,7 @@ func (s *CardService) MoveCard(ctx context.Context, cardMoveReq repository.CardM
 			return err
 		}
 
-		err = s.boardRepo.RemoveCardFromList(sc, cardMoveReq)
+		err = s.boardRepo.RemoveCardFromList(sc, cardDeleteFromList)
 		if err != nil {
 			return err
 		}
@@ -117,4 +124,50 @@ func (s *CardService) MoveCard(ctx context.Context, cardMoveReq repository.CardM
 	}
 
 	return "moved successfully", nil
+}
+
+func (s *CardService) DeleteCard(ctx context.Context, cardObjID primitive.ObjectID) (string, error) {
+	client := s.client
+	session, err := client.StartSession()
+	if err != nil {
+		return "", err
+	}
+	defer session.EndSession(ctx)
+
+	err = mongo.WithSession(ctx, session, func(sc mongo.SessionContext) error {
+		err := session.StartTransaction()
+		if err != nil {
+			return err
+		}
+
+		cardModel, err := s.cardRepo.FindByID(sc, cardObjID)
+		if err != nil {
+			session.AbortTransaction(sc)
+			return err
+		}
+
+		cardDeleteFromList := repository.CardDeleteFromList{
+			CardID:  cardModel.ID,
+			BoardID: cardModel.BoardID,
+			ListID:  cardModel.ListID,
+		}
+
+		_, err = s.cardRepo.Delete(sc, cardObjID)
+		if err != nil {
+			return err
+		}
+
+		err = s.boardRepo.RemoveCardFromList(sc, cardDeleteFromList)
+		if err != nil {
+			return err
+		}
+
+		return session.CommitTransaction(sc)
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return "deleted successfully", nil
 }

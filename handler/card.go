@@ -89,3 +89,18 @@ func (h *CardHandler) MoveCard(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": msg})
 }
+
+func (h *CardHandler) DeleteCard(c *gin.Context) {
+	cardObjID, err := primitive.ObjectIDFromHex(c.Param("cardID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	msg, err := h.service.DeleteCard(c.Request.Context(), cardObjID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": msg})
+}
