@@ -8,6 +8,7 @@ func (appConfig *appConfig) InitRouter() {
 
 	appConfig.router.POST("/list/:boardID", handler.List.CreateList)
 	appConfig.router.PATCH("/list/:boardID/:listID", handler.List.UpdateList)
+	appConfig.router.DELETE("/list/:boardID/:listID", handler.List.DeleteList)
 
 	appConfig.router.POST("/card", handler.Card.CreateCard)
 	appConfig.router.PATCH("/card/:cardID", handler.Card.UpdateCard)

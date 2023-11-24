@@ -66,3 +66,15 @@ func (h *ListHandler) UpdateList(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": msg})
 }
+
+func (h *ListHandler) DeleteList(c *gin.Context) {
+	ctx := context.WithValue(c.Request.Context(), boardIDKey, c.Param("boardID"))
+	ctx = context.WithValue(ctx, listIDKey, c.Param("listID"))
+
+	msg, err := h.service.Delete(ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": msg})
+}
