@@ -9,6 +9,7 @@ import (
 	"github.com/shoeb240/go-trello-clone/model"
 	"github.com/shoeb240/go-trello-clone/repository"
 	"github.com/shoeb240/go-trello-clone/service"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type BoardHandler struct {
@@ -45,7 +46,7 @@ func (h *BoardHandler) CreateBoard(c *gin.Context) {
 
 	boardID, err := h.service.Create(c.Request.Context(), boardModel)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	boardModel.ID = boardID
@@ -64,7 +65,22 @@ func (h *BoardHandler) UpdateBoard(c *gin.Context) {
 
 	msg, err := h.service.Update(ctx, boardModel)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": msg})
+}
+
+func (h *BoardHandler) DeleteBoard(c *gin.Context) {
+	boardObjID, err := primitive.ObjectIDFromHex(c.Param("boardID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	msg, err := h.service.Delete(c.Request.Context(), boardObjID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": msg})

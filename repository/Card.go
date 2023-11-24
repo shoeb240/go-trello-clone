@@ -98,3 +98,18 @@ func (r *CardRepository) Delete(ctx context.Context, cardObjID primitive.ObjectI
 	}
 	return "not deleted", nil
 }
+
+func (r *CardRepository) DeleteCardsByBoardID(ctx context.Context, boardObjID primitive.ObjectID) (string, error) {
+	filter := bson.M{
+		"board_id": boardObjID,
+	}
+	result, err := r.collection.DeleteOne(ctx, filter)
+
+	if err != nil {
+		return "", err
+	}
+	if result.DeletedCount > 0 {
+		return "deleted", nil
+	}
+	return "not deleted", nil
+}

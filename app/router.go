@@ -5,6 +5,7 @@ func (appConfig *appConfig) InitRouter() {
 	appConfig.router.GET("/:boardID", handler.Board.GetBoard)
 	appConfig.router.POST("/board", handler.Board.CreateBoard)
 	appConfig.router.PATCH("/board/:boardID", handler.Board.UpdateBoard)
+	appConfig.router.DELETE("/board/:boardID", handler.Board.DeleteBoard)
 
 	appConfig.router.POST("/list/:boardID", handler.List.CreateList)
 	appConfig.router.PATCH("/list/:boardID/:listID", handler.List.UpdateList)

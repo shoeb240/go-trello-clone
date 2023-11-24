@@ -164,3 +164,18 @@ func (r *BoardRepository) RemoveCardFromList(ctx context.Context, cardDeleteFrom
 	}
 	return nil
 }
+
+func (r *BoardRepository) Delete(ctx context.Context, boardObjID primitive.ObjectID) (string, error) {
+	filter := bson.M{
+		"_id": boardObjID,
+	}
+	result, err := r.collection.DeleteOne(ctx, filter)
+
+	if err != nil {
+		return "", err
+	}
+	if result.DeletedCount > 0 {
+		return "deleted", nil
+	}
+	return "not deleted", nil
+}
