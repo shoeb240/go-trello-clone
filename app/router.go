@@ -2,7 +2,10 @@ package app
 
 func (appConfig *appConfig) InitRouter() {
 	handler := appConfig.handler
-	appConfig.router.GET("/:boardID", handler.Board.GetBoard)
+
+	appConfig.router.POST("/signup", handler.User.Signup)
+
+	appConfig.router.GET("/board/:boardID", handler.Board.GetBoard)
 	appConfig.router.POST("/board", handler.Board.CreateBoard)
 	appConfig.router.PATCH("/board/:boardID", handler.Board.UpdateBoard)
 	appConfig.router.DELETE("/board/:boardID", handler.Board.DeleteBoard)
