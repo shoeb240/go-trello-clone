@@ -24,3 +24,7 @@ func NewUserService(repository *repository.Repository) *UserService {
 func (s *UserService) Signup(ctx context.Context, userModel model.User) (primitive.ObjectID, error) {
 	return s.userRepo.Signup(ctx, userModel)
 }
+
+func (s *UserService) Login(ctx context.Context, email string) (model.User, error) {
+	return s.userRepo.FindByEmail(ctx, email)
+}

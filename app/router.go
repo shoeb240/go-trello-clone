@@ -4,6 +4,7 @@ func (appConfig *appConfig) InitRouter() {
 	handler := appConfig.handler
 
 	appConfig.router.POST("/signup", handler.User.Signup)
+	appConfig.router.POST("/login", handler.User.Login)
 
 	appConfig.router.GET("/board/:boardID", handler.Board.GetBoard)
 	appConfig.router.POST("/board", handler.Board.CreateBoard)

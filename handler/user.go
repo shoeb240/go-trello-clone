@@ -2,9 +2,13 @@ package handler
 
 import (
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
+	"github.com/joho/godotenv"
 	"github.com/shoeb240/go-trello-clone/model"
 	"github.com/shoeb240/go-trello-clone/repository"
 	"github.com/shoeb240/go-trello-clone/service"
@@ -54,4 +58,39 @@ func (h *UserHandler) Signup(c *gin.Context) {
 	userModel.ID = userID
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Created", "data": userModel})
+}
+
+func (h *UserHandler) Login(c *gin.Context) {
+	var body struct {
+		Email    string
+		Password string
+	}
+	if err := c.BindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	userModel, err := h.service.Login(c.Request.Context(), body.Email)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err = bcrypt.CompareHashAndPassword(userModel.Password, []byte(body.Password)); err != nil {
+		c.JSON(http.StatusBadRequest, "invalid email or password")
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"uid": userModel.ID,
+		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+	})
+
+	godotenv.Load(".env")
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.SetCookie("Authorization", tokenString, 3600, "", "", false, true)
+
+	c.JSON(http.StatusCreated, gin.H{"token": tokenString})
 }

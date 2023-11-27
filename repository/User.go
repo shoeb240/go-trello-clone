@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/shoeb240/go-trello-clone/model"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -25,4 +26,18 @@ func (r *UserRepository) Signup(ctx context.Context, userModel model.User) (prim
 	}
 
 	return res.InsertedID.(primitive.ObjectID), nil
+}
+
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (model.User, error) {
+	user := model.User{}
+
+	filter := bson.M{
+		"email": email,
+	}
+
+	if err := r.collection.FindOne(ctx, filter).Decode(&user); err != nil {
+		return user, err
+	}
+
+	return user, nil
 }
