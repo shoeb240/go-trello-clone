@@ -41,3 +41,17 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (model.U
 
 	return user, nil
 }
+
+func (r *UserRepository) FindByID(ctx context.Context, userObjID primitive.ObjectID) (model.User, error) {
+	user := model.User{}
+
+	filter := bson.M{
+		"_id": userObjID,
+	}
+
+	if err := r.collection.FindOne(ctx, filter).Decode(&user); err != nil {
+		return user, err
+	}
+
+	return user, nil
+}

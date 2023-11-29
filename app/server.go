@@ -11,7 +11,7 @@ import (
 
 type appConfig struct {
 	router     *gin.Engine
-	repository *repository.Repository
+	Repository *repository.Repository
 	handler    *handler.Handler
 }
 
@@ -25,7 +25,7 @@ func NewAppConfig() *appConfig {
 
 	return &appConfig{
 		router:     gin.Default(),
-		repository: repository,
+		Repository: repository,
 		handler:    handler.NewHandlers(repository),
 	}
 }
